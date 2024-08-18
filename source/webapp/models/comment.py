@@ -9,6 +9,8 @@ class Comment(BaseModel):
                                 verbose_name='Статья')
     text = models.TextField(max_length=400, verbose_name='Комментарий')
 
+    likes_count = models.PositiveIntegerField(default=0)
+
     author = models.ForeignKey(
         get_user_model(),
         related_name="comments",

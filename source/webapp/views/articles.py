@@ -1,13 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.http import urlencode
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from webapp.forms import ArticleForm, SearchForm
 from webapp.models import Article
+from webapp.models.article_like import ArticleLike
 
 
 class ArticleListView(ListView):
@@ -89,3 +91,25 @@ class DeleteArticleView(PermissionRequiredMixin, DeleteView):
 
     def has_permission(self):
         return super().has_permission() or self.request.user == self.get_object().author
+
+
+def article_like(request, article_id):
+    article = get_object_or_404(Article, pk=article_id)
+    user = request.user
+
+    if request.method == "POST":
+        like, created = ArticleLike.objects.get_or_create(user=user, article=article)
+        if created:
+            article.likes_count =+ 1
+            article.save()
+        return JsonResponse({"likes": article.likes_count})
+
+    elif request.method == "DELETE":
+        try:
+            like = ArticleLike.objects.get(user=user, article=article)
+            like.delete()
+            article.likes_count =- 1
+            article.save()
+        except ArticleLike.DoesNotExist:
+            return "No likes"
+        return JsonResponse({"likes": article.likes_count})
