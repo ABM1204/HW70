@@ -18,14 +18,12 @@ async function makeRequest(url, method="POST") {
     }
 }
 
-
-async function toggleLike(event) {
+async function toggleCommentLike(event) {
     event.preventDefault();
     const button = event.currentTarget;
     const isLiked = button.dataset.isLiked === "true";
-    const objectId = button.dataset.articleId || button.dataset.commentId;
-    const isArticle = button.hasAttribute('data-article-id');
-    const url = isArticle ? `/article/${objectId}/like/` : `/comment/${objectId}/like/`;
+    const commentId = button.dataset.commentId;
+    const url = `/comment/${commentId}/like/`;
     const method = isLiked ? "DELETE" : "POST";
 
     try {
@@ -36,7 +34,6 @@ async function toggleLike(event) {
     }
 }
 
-
 function updateLikeButton(button, liked, likesCount) {
     const icon = button.querySelector('i');
     icon.className = liked ? 'bi bi-heart-fill' : 'bi bi-heart';
@@ -45,8 +42,8 @@ function updateLikeButton(button, liked, likesCount) {
 }
 
 function initLikeButtons() {
-    const likeButtons = document.querySelectorAll('.article-like-button, .comment-like-button');
-    likeButtons.forEach(button => button.addEventListener('click', toggleLike));
+    const likeButtons = document.querySelectorAll('.comment-like-button');
+    likeButtons.forEach(button => button.addEventListener('click', toggleCommentLike));
 }
 
 document.addEventListener('DOMContentLoaded', initLikeButtons);

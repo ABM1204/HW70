@@ -49,21 +49,19 @@ class DeleteCommentView(DeleteView):
 
 
 def comment_like(request, comment_id):
-    comment = get_object_or_404(Comment, pk=comment_id)
+    comment = get_object_or_404(Comment, id=comment_id)
     user = request.user
 
     if request.method == "POST":
         like, created = CommentLike.objects.get_or_create(user=user, comment=comment)
+        if created:
+            comment.likes_count += 1
+            comment.save()
+    elif request.method == "DELETE":
+        like = CommentLike.objects.filter(user=user, comment=comment).first()
         if like:
-            Comment.likes_count =+ 1
-            Comment.save()
-            return JsonResponse({"likes": Comment.likes_count})
-        elif request.method == "DELETE":
-            try:
-                like = CommentLike.objects.get(user=user, comment=comment)
-                like.delete()
-                Comment.likes_count =- 1
-                Comment.save()
-            except CommentLike.DoesNotExist:
-                return "Not exists"
-            return JsonResponse({"likes": Comment.likes_count})
+            like.delete()
+            comment.likes_count -= 1
+            comment.save()
+
+    return JsonResponse({"likes_count": comment.likes_count})

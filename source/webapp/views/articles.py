@@ -93,23 +93,20 @@ class DeleteArticleView(PermissionRequiredMixin, DeleteView):
         return super().has_permission() or self.request.user == self.get_object().author
 
 
-def article_like(request, article_id):
-    article = get_object_or_404(Article, pk=article_id)
+def like_article(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
     user = request.user
 
     if request.method == "POST":
         like, created = ArticleLike.objects.get_or_create(user=user, article=article)
         if created:
-            article.likes_count =+ 1
+            article.likes_count += 1
             article.save()
-        return JsonResponse({"likes": article.likes_count})
-
     elif request.method == "DELETE":
-        try:
-            like = ArticleLike.objects.get(user=user, article=article)
+        like = ArticleLike.objects.filter(user=user, article=article).first()
+        if like:
             like.delete()
-            article.likes_count =- 1
+            article.likes_count -= 1
             article.save()
-        except ArticleLike.DoesNotExist:
-            return "No likes"
-        return JsonResponse({"likes": article.likes_count})
+
+    return JsonResponse({"likes_count": article.likes_count})
